@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_futsal_field_user,futsal.field user,model_futsal_field,base.group_user,1,1,1,0
+access_futsal_field_manager,futsal.field manager,model_futsal_field,base.group_system,1,1,1,1
+access_futsal_booking_user,futsal.booking user,model_futsal_booking,base.group_user,1,1,1,0
+access_futsal_booking_manager,futsal.booking manager,model_futsal_booking,base.group_system,1,1,1,1

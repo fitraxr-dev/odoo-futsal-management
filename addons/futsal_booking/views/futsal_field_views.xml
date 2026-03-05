@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================
+         futsal.field – Form View
+    ============================================================ -->
+    <record id="view_futsal_field_form" model="ir.ui.view">
+        <field name="name">futsal.field.form</field>
+        <field name="model">futsal.field</field>
+        <field name="arch" type="xml">
+            <form string="Futsal Field">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="Field Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Field Info">
+                            <field name="code"/>
+                            <field name="price_per_hour"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Status">
+                            <field name="status" widget="radio"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         futsal.field – Tree View
+    ============================================================ -->
+    <record id="view_futsal_field_tree" model="ir.ui.view">
+        <field name="name">futsal.field.tree</field>
+        <field name="model">futsal.field</field>
+        <field name="arch" type="xml">
+            <tree string="Futsal Fields"
+                  decoration-success="status == 'available'"
+                  decoration-warning="status == 'maintenance'">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="price_per_hour" string="Price/Hour (Rp)"/>
+                <field name="status" widget="badge"
+                       decoration-success="status == 'available'"
+                       decoration-warning="status == 'maintenance'"/>
+                <field name="active" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         futsal.field – Search View
+    ============================================================ -->
+    <record id="view_futsal_field_search" model="ir.ui.view">
+        <field name="name">futsal.field.search</field>
+        <field name="model">futsal.field</field>
+        <field name="arch" type="xml">
+            <search string="Search Fields">
+                <field name="name"/>
+                <field name="code"/>
+                <filter name="available"    string="Available"    domain="[('status','=','available')]"/>
+                <filter name="maintenance"  string="Maintenance"  domain="[('status','=','maintenance')]"/>
+                <filter name="archived"     string="Archived"     domain="[('active','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_status" string="Status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         futsal.field – Action
+    ============================================================ -->
+    <record id="action_futsal_field" model="ir.actions.act_window">
+        <field name="name">Fields</field>
+        <field name="res_model">futsal.field</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_futsal_field_search"/>
+        <field name="context">{'search_default_available': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add your first futsal field!
+            </p>
+        </field>
+    </record>
+
+</odoo>

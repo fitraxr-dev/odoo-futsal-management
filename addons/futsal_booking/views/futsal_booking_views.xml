@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================
+         futsal.booking – Form View
+    ============================================================ -->
+    <record id="view_futsal_booking_form" model="ir.ui.view">
+        <field name="name">futsal.booking.form</field>
+        <field name="model">futsal.booking</field>
+        <field name="arch" type="xml">
+            <form string="Booking">
+                <header>
+                    <!-- Workflow buttons -->
+                    <button name="action_confirm"     string="Confirm"         type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_start"       string="Start"           type="object"
+                            class="btn-primary"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_done"        string="Mark as Done"    type="object"
+                            class="btn-success"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_cancel"      string="Cancel"          type="object"
+                            class="btn-danger"
+                            invisible="state in ['done', 'cancel']"/>
+                    <button name="action_reset_draft" string="Reset to Draft"  type="object"
+                            invisible="state != 'cancel'"/>
+                    <!-- Invoice button (visible once confirmed) -->
+                    <button name="action_create_invoice" string="Create Invoice" type="object"
+                            class="btn-secondary"
+                            invisible="state not in ['confirmed','in_progress','done'] or invoice_id != False"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed,in_progress,done"/>
+                </header>
+                <sheet>
+                    <!-- Smart buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object"
+                                name="action_view_sale_order" icon="fa-shopping-cart"
+                                invisible="so_count == 0">
+                            <field name="so_count" widget="statinfo" string="Sales Order"/>
+                        </button>
+                        <button class="oe_stat_button" type="object"
+                                name="action_view_invoice" icon="fa-file-text-o"
+                                invisible="invoice_count == 0">
+                            <field name="invoice_count" widget="statinfo" string="Invoice"/>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Booking Info">
+                            <field name="customer_id"/>
+                            <field name="field_id"/>
+                            <field name="booking_date"/>
+                        </group>
+                        <group string="Time &amp; Pricing">
+                            <field name="start_time"   widget="float_time"/>
+                            <field name="end_time"     widget="float_time"/>
+                            <field name="duration"     widget="float_time" readonly="1"/>
+                            <field name="price_unit"/>
+                            <field name="total_amount" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Linked Documents" invisible="state == 'draft'">
+                        <field name="sales_order_id" readonly="1"/>
+                        <field name="invoice_id"     readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         futsal.booking – Tree View
+    ============================================================ -->
+    <record id="view_futsal_booking_tree" model="ir.ui.view">
+        <field name="name">futsal.booking.tree</field>
+        <field name="model">futsal.booking</field>
+        <field name="arch" type="xml">
+            <tree string="Bookings"
+                  decoration-muted="state == 'cancel'"
+                  decoration-success="state == 'done'"
+                  decoration-info="state == 'confirmed'"
+                  decoration-warning="state == 'in_progress'">
+                <field name="name"/>
+                <field name="customer_id"/>
+                <field name="field_id"/>
+                <field name="booking_date"/>
+                <field name="start_time"  widget="float_time"/>
+                <field name="end_time"    widget="float_time"/>
+                <field name="duration"    widget="float_time"/>
+                <field name="total_amount"/>
+                <field name="state" widget="badge"
+                       decoration-muted="state == 'draft'"
+                       decoration-info="state == 'confirmed'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-success="state == 'done'"
+                       decoration-danger="state == 'cancel'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         futsal.booking – Search View
+    ============================================================ -->
+    <record id="view_futsal_booking_search" model="ir.ui.view">
+        <field name="name">futsal.booking.search</field>
+        <field name="model">futsal.booking</field>
+        <field name="arch" type="xml">
+            <search string="Search Bookings">
+                <field name="name"/>
+                <field name="customer_id"/>
+                <field name="field_id"/>
+                <filter name="draft"       string="Draft"       domain="[('state','=','draft')]"/>
+                <filter name="confirmed"   string="Confirmed"   domain="[('state','=','confirmed')]"/>
+                <filter name="in_progress" string="In Progress" domain="[('state','=','in_progress')]"/>
+                <filter name="done"        string="Done"        domain="[('state','=','done')]"/>
+                <filter name="cancel"      string="Cancelled"   domain="[('state','=','cancel')]"/>
+                <separator/>
+                <filter name="today" string="Today"
+                        domain="[('booking_date','=', context_today().strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_field"  string="Field"        context="{'group_by': 'field_id'}"/>
+                    <filter name="group_state"  string="Status"       context="{'group_by': 'state'}"/>
+                    <filter name="group_date"   string="Booking Date" context="{'group_by': 'booking_date'}"/>
+                    <filter name="group_customer" string="Customer"   context="{'group_by': 'customer_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         futsal.booking – Calendar View
+    ============================================================ -->
+    <record id="view_futsal_booking_calendar" model="ir.ui.view">
+        <field name="name">futsal.booking.calendar</field>
+        <field name="model">futsal.booking</field>
+        <field name="arch" type="xml">
+            <calendar string="Booking Schedule"
+                      date_start="datetime_start"
+                      date_stop="datetime_end"
+                      color="field_id"
+                      mode="week"
+                      quick_create="false">
+                <field name="field_id"/>
+                <field name="customer_id"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         futsal.booking – Action
+    ============================================================ -->
+    <record id="action_futsal_booking" model="ir.actions.act_window">
+        <field name="name">Bookings</field>
+        <field name="res_model">futsal.booking</field>
+        <field name="view_mode">tree,calendar,form</field>
+        <field name="search_view_id" ref="view_futsal_booking_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first booking!
+            </p>
+        </field>
+    </record>
+
+</odoo>
