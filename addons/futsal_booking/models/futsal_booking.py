@@ -1,5 +1,7 @@
 from datetime import datetime, time as dtime
 
+import pytz
+
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError, UserError
 
@@ -128,12 +130,17 @@ class FutsalBooking(models.Model):
     def _compute_datetime_slots(self):
         for rec in self:
             if rec.booking_date:
-                def to_dt(t):
+                tz_name = rec.env.user.tz or 'UTC'
+                tz = pytz.timezone(tz_name)
+
+                def to_utc(t):
                     h = int(t)
                     m = int(round((t - h) * 60))
-                    return datetime.combine(rec.booking_date, dtime(h, min(m, 59)))
-                rec.datetime_start = to_dt(rec.start_time)
-                rec.datetime_end = to_dt(rec.end_time)
+                    naive = datetime.combine(rec.booking_date, dtime(h, min(m, 59)))
+                    return tz.localize(naive).astimezone(pytz.utc).replace(tzinfo=None)
+
+                rec.datetime_start = to_utc(rec.start_time)
+                rec.datetime_end = to_utc(rec.end_time)
             else:
                 rec.datetime_start = False
                 rec.datetime_end = False
@@ -159,6 +166,26 @@ class FutsalBooking(models.Model):
     # ------------------------------------------------------------------ #
     #  Constraints                                                         #
     # ------------------------------------------------------------------ #
+
+    @api.constrains('booking_date', 'start_time')
+    def _check_not_in_past(self):
+        for rec in self:
+            if rec.state == 'cancel':
+                continue
+            tz = pytz.timezone(rec.env.user.tz or 'UTC')
+            now_local = datetime.now(tz)
+            h = int(rec.start_time)
+            m = int(round((rec.start_time - h) * 60))
+            booking_local = tz.localize(
+                datetime.combine(rec.booking_date, dtime(h, min(m, 59)))
+            )
+            if booking_local < now_local:
+                raise ValidationError(_(
+                    'Cannot create a booking in the past. '
+                    'The selected time %(time)s on %(date)s has already passed.',
+                    time=self._float_to_time(rec.start_time),
+                    date=rec.booking_date,
+                ))
 
     @api.constrains('start_time', 'end_time')
     def _check_time_range(self):
