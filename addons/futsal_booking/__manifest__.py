@@ -1,6 +1,6 @@
 {
     'name': 'Futsal Field Booking',
-    'version': '17.0.1.0.0',
+    'version': '19.0.1.0.0',
     'category': 'Services/Booking',
     'summary': 'Manage futsal field rentals, availability tracking, and bookings',
     'description': """
